@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import "dotenv/config";
 import { connectDB } from "./config/db.js";
+import redisClient, { connectRedis } from "./config/redis.js";
 import { createServer } from "http";
 import { Server } from "socket.io";
 import jwt from "jsonwebtoken";
@@ -45,10 +46,37 @@ io.use((socket, next) => {
 io.on("connection", (socket) => {
   console.log(`User connected: ${socket.id} [Role: ${socket.user.role}]`);
 
-  socket.on("rider:location_update", (data) => {
+  // Customer logic: Join a specific order room
+  socket.on("customer:join_order", (data) => {
+    if (socket.user.role !== 'customer') return;
+    if (data && data.orderId) {
+      const room = `order_${data.orderId}`;
+      socket.join(room);
+      console.log(`Customer ${socket.user.id} joined room: ${room}`);
+    }
+  });
+
+  // Rider logic: Broadcast telemetry and save to Redis
+  socket.on("rider:location_update", async (data) => {
     if (socket.user.role !== 'rider') return;
-    console.log(`[RIDER LOC UPDATE] Rider ID: ${socket.user.id} -> Lat: ${data.lat}, Lng: ${data.lng}`);
-    // In future phases: save to Redis, broadcast to customer, etc.
+
+    // Save to Redis with 60 second TTL
+    const redisKey = `rider:${socket.user.id}:location`;
+    const payload = JSON.stringify({ lat: data.lat, lng: data.lng, timestamp: Date.now() });
+
+    try {
+      await redisClient.setEx(redisKey, 60, payload);
+    } catch (err) {
+      console.error('Redis Set Error:', err);
+    }
+
+    // Mock active delivery check: broadcast if activeOrderId is passed
+    if (data.activeOrderId) {
+      io.to(`order_${data.activeOrderId}`).emit("order:rider_location", {
+        lat: data.lat,
+        lng: data.lng
+      });
+    }
   });
 
   socket.on("disconnect", () => {
@@ -62,6 +90,7 @@ app.use(cors());
 
 // DB connection
 connectDB();
+connectRedis();
 
 // API endpoints
 app.use("/images", express.static("uploads"));
