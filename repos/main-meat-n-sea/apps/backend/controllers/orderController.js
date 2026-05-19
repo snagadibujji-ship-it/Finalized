@@ -7,8 +7,8 @@ const placeOrder = async (req, res) => {
   try {
     const { vendorId, items, deliveryAddress, paymentMethod } = req.body;
 
-    // Server-side calculation to prevent price manipulation
-    let calculatedSubtotal = 0;
+    // Server-side calculation to prevent price manipulation using Paise/Cents (integer math)
+    let calculatedSubtotalPaise = 0;
     const finalItems = [];
 
     for (const item of items) {
@@ -18,7 +18,8 @@ const placeOrder = async (req, res) => {
       }
 
       const priceToUse = product.offerPrice ? product.offerPrice : product.price;
-      calculatedSubtotal += priceToUse * item.qty;
+      // Convert to integer paise/cents before multiplying
+      calculatedSubtotalPaise += Math.round(priceToUse * 100) * item.qty;
 
       finalItems.push({
         productId: product._id,
@@ -28,18 +29,18 @@ const placeOrder = async (req, res) => {
       });
     }
 
-    const deliveryFee = 60; // Mock fixed fee, would be distance based later
-    const platformFee = Math.round(calculatedSubtotal * 0.10); // 10% platform fee
-    const total = calculatedSubtotal + deliveryFee + platformFee;
+    const deliveryFeePaise = 60 * 100; // Fixed 60 rupees converted to paise
+    const platformFeePaise = Math.round(calculatedSubtotalPaise * 0.10); // 10% platform fee
+    const totalPaise = calculatedSubtotalPaise + deliveryFeePaise + platformFeePaise;
 
     const newOrder = new orderModel({
       customerId: req.user.userId,
       vendorId,
       items: finalItems,
-      subtotal: calculatedSubtotal,
-      deliveryFee,
-      platformFee,
-      total,
+      subtotal: calculatedSubtotalPaise,
+      deliveryFee: deliveryFeePaise,
+      platformFee: platformFeePaise,
+      total: totalPaise,
       paymentMethod,
       deliveryAddress
     });

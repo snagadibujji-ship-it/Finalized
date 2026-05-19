@@ -13,8 +13,8 @@ const vendorSchema = new mongoose.Schema({
   workingHours: { type: String },
   serviceRadius: { type: Number, default: 5 }, // in km
   serviceAreaCoords: {
-    lat: { type: Number },
-    lng: { type: Number }
+    type: { type: String, enum: ['Point'], default: 'Point' },
+    coordinates: { type: [Number], required: true } // Array of [longitude, latitude]
   },
   bankAccount: { type: String },
   upiId: { type: String },
@@ -27,6 +27,8 @@ const vendorSchema = new mongoose.Schema({
   rating: { type: Number, default: 0 },
   totalOrders: { type: Number, default: 0 }
 }, { timestamps: true });
+
+vendorSchema.index({ serviceAreaCoords: '2dsphere' });
 
 const vendorModel = mongoose.models.Vendor || mongoose.model("Vendor", vendorSchema);
 

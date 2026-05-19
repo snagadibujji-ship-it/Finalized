@@ -12,8 +12,8 @@ const userSchema = new mongoose.Schema(
       default: "customer"
     },
     location: {
-      lat: { type: Number },
-      lng: { type: Number }
+      type: { type: String, enum: ['Point'], default: 'Point' },
+      coordinates: { type: [Number], required: true } // Array of [longitude, latitude]
     },
     walletBalance: { type: Number, default: 0 },
     fcmToken: { type: String },
@@ -22,6 +22,8 @@ const userSchema = new mongoose.Schema(
   },
   { timestamps: true, minimize: false }
 );
+
+userSchema.index({ location: '2dsphere' });
 
 const userModel = mongoose.models.User || mongoose.model("User", userSchema);
 export default userModel;

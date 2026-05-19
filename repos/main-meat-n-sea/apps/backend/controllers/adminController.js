@@ -17,8 +17,17 @@ const getDashboardStats = async (req, res) => {
 
 const listAllVendors = async (req, res) => {
   try {
-    const vendors = await vendorModel.find().populate('userId', 'name email phone');
-    res.json({ success: true, vendors });
+    const vendors = await vendorModel.find().populate('userId', 'name email phone').lean();
+
+    // Mask sensitive PII before sending to the frontend
+    const maskedVendors = vendors.map(v => {
+      if (v.aadhaar) v.aadhaar = '[Aadhaar Redacted]';
+      if (v.pan) v.pan = '[PAN Redacted]';
+      if (v.bankAccount) v.bankAccount = 'XXXX-XXXX-' + String(v.bankAccount).slice(-4);
+      return v;
+    });
+
+    res.json({ success: true, vendors: maskedVendors });
   } catch (error) {
     res.status(500).json({ success: false, message: "Server Error" });
   }
