@@ -63,10 +63,105 @@ const updateLocation = async (req, res) => {
   }
 };
 
-// Get Available Jobs (Stub)
+import orderModel from "../models/orderModel.js";
+import mongoose from "mongoose";
+
+// Get Available Jobs (Batched by Vendor)
 const getAvailableJobs = async (req, res) => {
-  // In a full implementation, this queries Orders with status="preparing" near rider's location
-  res.json({ success: true, jobs: [] });
+  try {
+    const batchedJobs = await orderModel.aggregate([
+      // 1. Only find orders that are preparing and unassigned
+      { $match: { status: 'preparing', riderId: null } },
+
+      // 2. Group by Vendor
+      {
+        $group: {
+          _id: '$vendorId',
+          orders: {
+            $push: {
+              orderId: '$_id',
+              deliveryAddress: '$deliveryAddress',
+              subtotalPaise: '$subtotal',
+              deliveryFeePaise: '$deliveryFee'
+            }
+          },
+          totalBatchEarningsPaise: { $sum: '$deliveryFee' }
+        }
+      },
+
+      // 3. Lookup Vendor info (Location & Name)
+      { $lookup: { from: 'vendors', localField: '_id', foreignField: '_id', as: 'vendorDetails' } },
+      { $unwind: '$vendorDetails' },
+
+      // 4. Format output
+      {
+        $project: {
+          _id: 0,
+          vendorId: '$_id',
+          vendorName: '$vendorDetails.shopName',
+          vendorLocation: '$vendorDetails.serviceAreaCoords',
+          totalBatchEarningsPaise: 1,
+          totalDropoffs: { $size: '$orders' },
+          orders: 1
+        }
+      }
+    ]);
+
+    res.json({ success: true, jobs: batchedJobs });
+  } catch (error) {
+    console.error("Fetch Jobs Error:", error);
+    res.status(500).json({ success: false, message: "Server Error" });
+  }
 };
 
-export { registerRider, getRiderProfile, toggleAvailability, updateLocation, getAvailableJobs };
+// Accept Batch of Orders (Atomic)
+const acceptBatchJob = async (req, res) => {
+  try {
+    const { orderIds } = req.body;
+
+    if (!orderIds || !Array.isArray(orderIds) || orderIds.length === 0) {
+      return res.status(400).json({ success: false, message: "Invalid payload" });
+    }
+
+    const rider = await riderModel.findOne({ userId: req.user.userId });
+    if (!rider || !rider.isAvailable) {
+      return res.status(403).json({ success: false, message: "Rider not found or offline" });
+    }
+
+    // ATOMIC UPDATE: Only update if ALL requested orders currently have riderId: null
+    // Use MongoDB's $in operator with the riderId condition
+    const updateResult = await orderModel.updateMany(
+      {
+        _id: { $in: orderIds.map(id => new mongoose.Types.ObjectId(id)) },
+        riderId: null,
+        status: 'preparing'
+      },
+      {
+        $set: { riderId: rider._id, status: 'pickup_assigned' },
+        $push: { statusTimeline: { status: 'pickup_assigned', timestamp: new Date() } }
+      }
+    );
+
+    // Race condition check: Verify we actually captured the exact number of orders we requested
+    if (updateResult.modifiedCount !== orderIds.length) {
+      // Rollback: Another rider grabbed part or all of the batch.
+      // We must reset the ones we *did* grab back to null to maintain batch integrity.
+      if (updateResult.modifiedCount > 0) {
+        await orderModel.updateMany(
+          { _id: { $in: orderIds.map(id => new mongoose.Types.ObjectId(id)) }, riderId: rider._id },
+          {
+            $set: { riderId: null, status: 'preparing' }
+          }
+        );
+      }
+      return res.status(409).json({ success: false, message: "Batch no longer available. Another rider accepted it." });
+    }
+
+    res.json({ success: true, message: "Batch successfully assigned", assignedOrdersCount: updateResult.modifiedCount });
+  } catch (error) {
+    console.error("Accept Batch Error:", error);
+    res.status(500).json({ success: false, message: "Server Error" });
+  }
+};
+
+export { registerRider, getRiderProfile, toggleAvailability, updateLocation, getAvailableJobs, acceptBatchJob };
