@@ -14,6 +14,7 @@ import productRouter from "./routes/productRoute.js";
 import orderRouter from "./routes/orderRoute.js";
 import riderRouter from "./routes/riderRoute.js";
 import adminRouter from "./routes/adminRoute.js";
+import paymentRouter from "./routes/paymentRoute.js";
 
 // app config
 const app = express();
@@ -102,6 +103,7 @@ app.use("/api/products", productRouter);
 app.use("/api/orders", orderRouter);
 app.use("/api/riders", riderRouter);
 app.use("/api/admin", adminRouter);
+app.use("/api/payments", paymentRouter);
 
 app.get("/", (req, res) => {
   res.send("MEAT N SEA API is running...");

@@ -27,20 +27,51 @@ export default function CartScreen() {
 
       // NOTE: We don't send calculated prices (subtotal/fees) because the Phase 2 backend
       // strictly recalculates everything in Integer Paise to prevent tampering!
-      await axios.post(`${API_URL}/orders`, {
+      const orderRes = await axios.post(`${API_URL}/orders`, {
         vendorId,
         items: formattedItems,
         deliveryAddress: "123 Customer Home St",
-        paymentMethod: "cod" // Defaulting to COD for Phase 4
+        paymentMethod: "razorpay" // Switching to razorpay for Phase 7
       }, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
-      Alert.alert("Success!", "Your order has been placed successfully.");
-      clearCart();
+      const backendOrder = orderRes.data.order;
+
+      // Phase 7: Mock Payment Gateway Flow
+      Alert.alert("Simulating Razorpay UI...", "Processing payment...", [
+        {
+          text: "Confirm Payment",
+          onPress: async () => {
+            try {
+              // Create Razorpay Order
+              const rpOrderRes = await axios.post(`${API_URL}/payments/create-order`, {
+                amount: backendOrder.total,
+                receipt: backendOrder._id
+              }, { headers: { Authorization: `Bearer ${token}` } });
+
+              const rpOrder = rpOrderRes.data.order;
+
+              // Verify Razorpay Order (Mock Mode auto-approves)
+              await axios.post(`${API_URL}/payments/verify`, {
+                internal_order_id: backendOrder._id,
+                razorpay_order_id: rpOrder.id,
+                razorpay_payment_id: "mock_payment_" + Date.now(),
+                razorpay_signature: "mock_signature"
+              }, { headers: { Authorization: `Bearer ${token}` } });
+
+              Alert.alert("Success!", "Payment successful and Order Placed.");
+              clearCart();
+            } catch (err) {
+               Alert.alert("Payment Failed", "Could not process transaction.");
+            } finally {
+               setLoading(false);
+            }
+          }
+        }
+      ]);
     } catch (error: any) {
       Alert.alert("Order Failed", error.response?.data?.message || "Something went wrong");
-    } finally {
       setLoading(false);
     }
   };
@@ -83,7 +114,7 @@ export default function CartScreen() {
           onPress={handlePlaceOrder}
           disabled={loading}
         >
-          {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.checkoutBtnText}>Place Order (COD)</Text>}
+          {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.checkoutBtnText}>Proceed to Pay</Text>}
         </TouchableOpacity>
       </View>
     </View>
