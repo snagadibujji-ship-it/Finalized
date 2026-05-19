@@ -1,0 +1,136 @@
+/*********************************************************************************************************************
+ *  Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.                                               *
+ *                                                                                                                   *
+ *  Permission is hereby granted, free of charge, to any person obtaining a copy of                                  *
+ *  this software and associated documentation files (the "Software"), to deal in                                    *
+ *  the Software without restriction, including without limitation the rights to                                     *
+ *  use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of                                 *
+ *  the Software, and to permit persons to whom the Software is furnished to do so.                                  *
+ *                                                                                                                   *
+ *  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR                                       *
+ *  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS                                 *
+ *  FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR                                   *
+ *  COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER                                   *
+ *  IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN                                          *
+ *  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                                       *
+ *********************************************************************************************************************/
+import { Construct } from 'constructs'
+import { aws_events as events, custom_resources as cr } from 'aws-cdk-lib'
+import { MemoryDBCluster } from '@prototype/live-data-cache'
+import { WebhookProviderBase } from '@prototype/provider'
+import { VpcLambdaProps } from '@prototype/lambda-common'
+import { ExampleCallbackLambda } from './lambdas/ExampleCallback'
+import { RequestOrderFulfillmentLambda } from './lambdas/RequestOrderFulfillment'
+import { CancelOrderLambda } from './lambdas/CancelOrder'
+import { GetOrderStatusLambda } from './lambdas/GetOrderStatus'
+
+export interface ExampleWebhookProviderProps extends VpcLambdaProps {
+	readonly webhookProviderSettings: { [key: string]: string | number, }
+	readonly eventBus: events.IEventBus
+	readonly memoryDBCluster: MemoryDBCluster
+	readonly externalProviderMockUrl: string
+	readonly externalProviderSecretName: string
+}
+
+export class ExampleWebhookProvider extends WebhookProviderBase {
+	constructor (scope: Construct, id: string, props: ExampleWebhookProviderProps) {
+		const {
+			webhookProviderSettings,
+			eventBus,
+			vpc,
+			lambdaSecurityGroups,
+			layers,
+			externalProviderMockUrl,
+			externalProviderSecretName,
+			memoryDBCluster,
+		} = props
+
+		const callbackLambdaHandler = new ExampleCallbackLambda(scope, 'WebhookProvider-ExampleCallbackLambda', {
+			dependencies: {
+				eventBus,
+				vpc,
+				lambdaSecurityGroups,
+				lambdaLayers: [layers.lambdaUtilsLayer, layers.lambdaInsightsLayer, layers.redisClientLayer],
+				memoryDBCluster,
+			},
+		})
+
+		const requestOrderFulfillmentLambda = new RequestOrderFulfillmentLambda(scope, 'ExampleWebhookProvider-RequestOrderFulfillmentLambda', {
+			dependencies: {
+				eventBus,
+				vpc,
+				lambdaSecurityGroups,
+				lambdaLayers: [layers.lambdaUtilsLayer, layers.lambdaInsightsLayer, layers.redisClientLayer],
+				externalProviderMockUrl,
+				externalProviderSecretName,
+				memoryDBCluster,
+			},
+		})
+
+		const getOrderStatusLambda = new GetOrderStatusLambda(scope, 'ExampleWebhookProvider-GetOrderStatusLambda', {
+			dependencies: {
+				eventBus,
+				vpc,
+				lambdaSecurityGroups,
+				lambdaLayers: [layers.lambdaUtilsLayer, layers.lambdaInsightsLayer, layers.redisClientLayer],
+				externalProviderMockUrl,
+				externalProviderSecretName,
+				memoryDBCluster,
+			},
+		})
+
+		const cancelOrderLambda = new CancelOrderLambda(scope, 'ExampleWebhookProvider-CancelOrderLambda', {
+			dependencies: {
+				eventBus,
+				vpc,
+				lambdaSecurityGroups,
+				lambdaLayers: [layers.lambdaUtilsLayer, layers.lambdaInsightsLayer, layers.redisClientLayer],
+				externalProviderMockUrl,
+				externalProviderSecretName,
+				memoryDBCluster,
+			},
+		})
+
+		super(scope, id, {
+			name: 'ExampleWebhookProvider',
+			providerSettings: webhookProviderSettings,
+			baseHandlers: {
+				getOrderStatusLambda,
+				cancelOrderLambda,
+				requestOrderFulfillmentLambda,
+			},
+			callback: {
+				httpMethod: 'POST',
+				lambdaHandler: callbackLambdaHandler,
+				resourcePath: '/callback',
+			},
+		})
+
+		const action = {
+			service: 'Lambda',
+			action: 'updateFunctionConfiguration',
+			parameters: {
+				FunctionName: requestOrderFulfillmentLambda.functionArn,
+				Environment: {
+					Variables: {
+						/// needed to avoid that env will get fully replaced with only the additional one
+						...requestOrderFulfillmentLambda.environmentVariables,
+						API_BASE_URL: this.apiGwInstance.url,
+					},
+				},
+			},
+			physicalResourceId: cr.PhysicalResourceId.fromResponse('FunctionName'),
+		}
+
+		/// to fix circular dependency: this updates the configuration of the lambda function utilised
+		/// to set the API gateway URL
+		// temporary fix with Date.now() to force resource redeployment
+		new cr.AwsCustomResource(this, `WebhookProviderLambdaConfigurationResource-${Date.now().toString(36)}`, {
+			onCreate: action,
+			onUpdate: action,
+			policy: cr.AwsCustomResourcePolicy.fromSdkCalls({
+				resources: cr.AwsCustomResourcePolicy.ANY_RESOURCE,
+			}),
+		})
+	}
+}

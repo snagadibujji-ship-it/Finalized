@@ -1,0 +1,38 @@
+{
+  "name": "@aws-play/cdk-apigateway",
+  "description": "cdk-apigateway/RestApi extension",
+  "version": "0.0.0-alpha.4",
+  "license": "MIT-0",
+  "author": "Amazon Web Services - ASEAN Prototying",
+  "homepage": "https://github.com/aws-samples/aws-last-mile-delivery-hyperlocal",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/aws-samples/aws-last-mile-delivery-hyperlocal"
+  },
+  "main": "dist/index.js",
+  "module": "dist/index.module.js",
+  "typings": "dist/index.d.ts",
+  "directories": {
+    "lib": "dist",
+    "test": "test"
+  },
+  "scripts": {
+    "clean": "rm -rf dist",
+    "build": "tsc --project tsconfig.json",
+    "watch": "yarn build --watch",
+    "test": "jest"
+  },
+  "dependencies": {
+    "@aws-play/cdk-core": "^0.0.0-alpha.14"
+  },
+  "peerDependencies": {
+    "aws-cdk-lib": "^2.24.1",
+    "cdk-constants": "^3.0.3",
+    "constructs": "^10.0.0",
+    "typescript": "^4.5.5"
+  },
+  "devDependencies": {
+    "node-notifier": "^10.0.1"
+  },
+  "private": true
+}

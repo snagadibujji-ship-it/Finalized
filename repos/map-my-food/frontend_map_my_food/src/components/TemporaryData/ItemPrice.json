@@ -1,0 +1,98 @@
+{
+  "d7b3cef8-b917-455e-8164-88fa6d899250": {
+    "hotal": "IFC RESTAURANT",
+    "name": "Veg Manchurian",
+    "price": 180,
+    "image": "/swiggey/Search/Big/2a.webp"
+  },
+  "79e3127b-8714-484c-bd9c-d61fe348e3a3": {
+    "hotal": "IFC RESTAURANT",
+    "name": "Paneer Manchurian",
+    "price": 259,
+    "image": "/swiggey/Search/Big/2b.webp"
+  },
+  "093be05b-84cf-444f-a086-55c07c0e7d24": {
+    "hotal": "IFC RESTAURANT",
+    "name": "Paneer 65",
+    "price": 320,
+    "image": "/swiggey/Search/Big/3a.jpg"
+  },
+  "0ae83119-c5bd-4e3d-ade0-84a1db127c27": {
+    "hotal": "IFC RESTAURANT",
+    "name": "Paneer Kadhai",
+    "price": 280,
+    "image": "/swiggey/Search/Big/3b.jpg"
+  },
+  "372d48e2-bc78-4d85-ac61-bf8c3dffbb98": {
+    "hotal": "IFC RESTAURANT",
+    "name": "Chicken Biryani",
+    "price": 70,
+    "image": "/swiggey/Search/Big/1a.jpg"
+  },
+  "b126c734-9d4a-4517-8dd6-c746434b8023": {
+    "hotal": "IFC RESTAURANT",
+    "name": "Chicken Chilli",
+    "price": 60,
+    "image": "/swiggey/Search/Big/1b.jpg"
+  },
+  "caafb3e4-c555-4700-a734-db0005f96e6e": {
+    "hotal": "By Hyderabad Biryani Hotel",
+    "name": "Chicken Biryani",
+    "price": 70,
+    "image": "/swiggey/Search/Big/1a.jpg"
+  },
+  "13eb4729-ee50-4268-b808-50504b0f85ff": {
+    "hotal": "By GREEN RESTO",
+    "name": "Chicken Chilli",
+    "price": 60,
+    "image": "/swiggey/Search/Big/1b.jpg"
+  },
+  "b7bf1adb-01f9-43b4-831c-092d2e417a55": {
+    "hotal": "By HOTEL SAGAR",
+    "name": "Veg Manchurian",
+    "price": 180,
+    "image": "/swiggey/Search/Big/2a.webp"
+  },
+  "49420eb9-b3cd-415d-be78-883a99ce986c": {
+    "hotal": "By GREEN HOTEL",
+    "name": "Paneer Manchurian",
+    "price": 259,
+    "image": "/swiggey/Search/Big/2b.webp"
+  },
+  "3288e3c7-b88e-4004-a0f2-9552e486db3a": {
+    "hotal": "By GREEN RESTO",
+    "name": "Paneer 65",
+    "price": 320,
+    "image": "/swiggey/Search/Big/3a.jpg"
+  },
+  "a10e0862-7304-47b5-882a-e9dd2d861340": {
+    "hotal": "By HOTEL SAGAR",
+    "name": "Paneer Kadhai",
+    "price": 280,
+    "image": "/swiggey/Search/Big/3b.jpg"
+  },
+  "13c80b74-d84c-4110-9c49-64e4b32881f5": {
+    "hotal": "By HOTEL SAGAR",
+    "name": "Green Apple Mojito",
+    "price": 58,
+    "image": "/swiggey/Search/Small/1.webp"
+  },
+  "9a3a4659-f816-4e73-ab7a-5d94e70df46f": {
+    "hotal": "By GREEN HOTEL",
+    "name": "Green Apple",
+    "price": 47,
+    "image": "/swiggey/Search/Small/2.jpg"
+  },
+  "22271385-0ed5-43b6-b284-2031083d5ca3": {
+    "hotal": "By GREEN RESTO",
+    "name": "Apple Pie",
+    "price": 61,
+    "image": "/swiggey/Search/Small/3.jpg"
+  },
+  "4ba9fa6e-df51-492e-8009-b6dfc1827291": {
+    "hotal": "By Hyderabad Biryani Hotel",
+    "name": "Green Apple Shake",
+    "price": 49,
+    "image": "/swiggey/Search/Small/4.jpg"
+  }
+}

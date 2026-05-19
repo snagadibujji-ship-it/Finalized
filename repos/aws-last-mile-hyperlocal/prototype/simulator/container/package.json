@@ -1,0 +1,29 @@
+{
+  "name": "simulator-container",
+  "private": "true",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node -r dotenv/config src/index.js",
+    "start:origin": "node -r dotenv/config src/originApp.js",
+    "start:destination": "node -r dotenv/config src/destinationApp.js",
+    "start:prod": "node src/index.js",
+    "build:docker": "./build.sh sim-simulator-repository hyperlocalAdmin"
+  },
+  "author": "Amazon Web Services - ASEAN Prototying",
+  "license": "MIT-0",
+  "dependencies": {
+    "@mapbox/polyline": "^1.1.1",
+    "aws-amplify": "^4.3.14",
+    "aws-iot-device-sdk": "^2.2.6",
+    "aws-sdk": "^2.868.0",
+    "axios": "^0.25.0",
+    "commander": "^7.2.0",
+    "console-log-level": "^1.4.1",
+    "dayjs": "^1.10.7",
+    "dotenv": "^8.2.0",
+    "glob": "^7.1.6",
+    "nanoid": "^3.2.0"
+  }
+}

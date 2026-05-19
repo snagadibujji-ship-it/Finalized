@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/delivery/"
+title = "LocalMart Delivery"
+version = "1.0.0"
+id = "artifacts/delivery-app"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/delivery/" ]
+localPort = 3002
+
+[services.development]
+run = "pnpm --filter @workspace/delivery-app run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/delivery-app", "run", "build" ]
+publicDir = "artifacts/delivery-app/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "3002"
+BASE_PATH = "/delivery/"

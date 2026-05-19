@@ -1,0 +1,136 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 6rem;
+  padding: 3rem 8rem 5rem 8rem;
+  background-color: #e9e9eb;
+}
+.container_bottom {
+  width: 100%;
+}
+.box_above {
+  width: 100%;
+}
+.opening {
+  margin-bottom: 1rem;
+  width: 32%;
+  height: 20px;
+  border-radius: 3px;
+}
+.box {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  gap: 2rem;
+  width: 100%;
+  flex-wrap: wrap;
+}
+.each_item {
+  position: relative;
+  width: 220px;
+  height: 38px;
+  padding: 2rem 1rem 2rem 4rem;
+  box-shadow: 0 1px 10px 0 rgba(40, 44, 63, 0.08);
+  border-radius: 5px;
+}
+.each_item:hover {
+  box-shadow: 0 1px 10px 0 rgba(40, 44, 63, 0.4);
+}
+.image {
+  position: absolute;
+  top: 50%;
+  left: 0%;
+  transform: translate(-50%, -50%);
+  width: 75px;
+  height: 75px;
+  border-radius: 3px;
+}
+.note {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 0.75rem;
+  width: auto;
+}
+.note h3 {
+  margin: 0;
+  padding: 0;
+  width: 200px;
+  height: 10px;
+  border-radius: 3px;
+}
+.note p {
+  margin: 0;
+  padding: 0;
+  width: 150px;
+  height: 10px;
+  border-radius: 3px;
+}
+.animated_bg {
+  background-image: linear-gradient(
+    to right,
+    #f6f7f8 0%,
+    #edeef1 10%,
+    #f6f7f8 20%,
+    #f6f7f8 100%
+  );
+  background-size: 200% 100%;
+  animation: bgPos 1s linear infinite;
+}
+.animated_bg_dark {
+  background-image: linear-gradient(
+    to right,
+    #c0c0c0 0%,
+    #adadad 10%,
+    #a8a8a8 20%,
+    #b7b7b7 100%
+  );
+  background-size: 200% 100%;
+  animation: bgPos 1s linear infinite;
+}
+
+@keyframes bgPos {
+  0% {
+    background-position: 50% 0;
+  }
+
+  100% {
+    background-position: -150% 0;
+  }
+}
+@media screen and (max-width: 925px) {
+  .box {
+    justify-content: center;
+  }
+  .opening {
+    width: 52%;
+  }
+}
+
+@media screen and (max-width: 520px) {
+  .container {
+    padding: 2rem;
+    padding-left: 5rem;
+    gap: 3rem;
+  }
+  .note h3 {
+    width: 200px;
+  }
+}
+@media screen and (max-width: 320px) {
+  .container {
+    padding: 1rem;
+    padding-left: 3rem;
+    gap: 2rem;
+  }
+  .each_item {
+    width: 150px;
+  }
+  .note h3 {
+    width: 150px;
+  }
+}

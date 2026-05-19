@@ -1,0 +1,14 @@
+2022-04-20T19:19:43.799+0800	[34mINFO[0m	Detected OS: amazon
+2022-04-20T19:19:43.799+0800	[34mINFO[0m	Detecting Amazon Linux vulnerabilities...
+2022-04-20T19:19:43.808+0800	[34mINFO[0m	Number of language-specific files: 1
+2022-04-20T19:19:43.808+0800	[34mINFO[0m	Detecting jar vulnerabilities...
+
+delivery-dispatch-sameday-directpudo-docker:latest (amazon 2 (Karoo))
+=====================================================================
+Total: 0 (UNKNOWN: 0, LOW: 0, MEDIUM: 0, HIGH: 0, CRITICAL: 0)
+
+
+Java (jar)
+==========
+Total: 0 (UNKNOWN: 0, LOW: 0, MEDIUM: 0, HIGH: 0, CRITICAL: 0)
+

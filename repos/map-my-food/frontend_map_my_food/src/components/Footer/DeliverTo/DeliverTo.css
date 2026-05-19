@@ -1,0 +1,37 @@
+.box {
+  border-bottom: 2px solid #4d4d4d;
+  padding-bottom: 1rem;
+  margin-bottom: 1rem;
+}
+.heading {
+  color: gray;
+  font-size: 15px;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+.items {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+ul {
+  margin: 0;
+  padding: 0;
+  list-style-type: none;
+}
+.item,
+.item_b {
+  color: inherit;
+  font-size: 17px;
+  margin-top: 15px;
+}
+.item {
+  list-style: none;
+  text-transform: capitalize;
+}
+a {
+  text-decoration: none;
+  word-break: break-all;
+}

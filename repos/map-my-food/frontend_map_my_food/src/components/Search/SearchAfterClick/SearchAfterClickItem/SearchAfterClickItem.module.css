@@ -1,0 +1,231 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  width: -webkit-fill-available;
+}
+.box {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  width: -webkit-fill-available;
+  /* height: 60vh;
+  overflow-y: scroll;
+  padding-top: 7.5rem; */
+}
+.items {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  position: relative;
+  padding: 1rem;
+  padding-top: 3rem;
+  background: #f5f6f8;
+}
+.items > h1 {
+  padding: 0;
+  margin: 0;
+  font-size: 2rem;
+  position: absolute;
+  top: 5px;
+  left: 20px;
+}
+.item {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  width: 380px;
+  box-shadow: 0 4px 29px #e8e8e8;
+  background-color: #fff;
+  padding: 1.4rem 1rem 0.5rem;
+  border-radius: 24px;
+}
+.item_part1 {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  position: relative;
+  width: -webkit-fill-available;
+  cursor: pointer;
+}
+.svgarrow {
+  position: absolute;
+  top: 0;
+  right: 0;
+}
+.item_part1 > h1 {
+  padding: 0;
+  margin: 0;
+  color: #686b78;
+}
+.item_part1_hotal {
+  font-size: 0.9rem;
+  color: #686b78;
+  font-weight: bold;
+}
+.item_part1_star {
+  font-size: 0.8rem;
+  color: #7e808c;
+  padding-top: 0.5rem;
+}
+.item_part1_star img {
+  width: 0.8rem;
+  height: 0.8rem;
+  padding-right: 0.2rem;
+}
+.item_part2 {
+  font-size: 0.9rem;
+  color: #fa4a5b;
+  padding: 1rem 0rem;
+}
+.item_part3 {
+  border-top: 1px dashed #7e808c;
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 1rem;
+  padding-top: 1rem;
+  padding-bottom: 1.5rem;
+}
+.item_part3_left {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+}
+.item_part3_name {
+  font-size: 1.1rem;
+  color: #3e4152;
+  padding-top: 0.8rem;
+}
+.item_part3_name > img {
+  width: 0.8rem;
+  height: 0.8rem;
+  padding-right: 0.2rem;
+}
+.item_part3_price {
+  font-size: 0.8rem;
+  color: #3e4152;
+  padding-top: 0.4rem;
+}
+.item_part3_price:before {
+  content: "\20B9";
+  color: #535665;
+  padding-right: 1px;
+}
+.item_part3_para {
+  font-size: 0.8rem;
+  color: #282c3f73;
+  padding-top: 1rem;
+}
+.item_part3_right {
+  max-width: 200px;
+  height: 135px;
+  position: relative;
+}
+.item_part3_right img {
+  width: 100%;
+  height: 100%;
+  border-radius: 12px;
+}
+.addButton {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: #ffffff;
+  text-decoration: none;
+  cursor: pointer;
+  display: inline-block;
+  text-align: center;
+  border: none;
+  font-weight: 600;
+  font-size: 0.7rem;
+  padding: 0.6rem 1.5rem;
+  letter-spacing: 0;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.12);
+  text-transform: uppercase;
+  white-space: nowrap;
+  border: 1px solid #dcdee8;
+  line-height: 1;
+  color: #60b246;
+  border-radius: 5px;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.2);
+  padding: 0.5rem 1.5rem;
+}
+.addButton:hover {
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.5);
+}
+@media screen and (max-width: 1470px) {
+  .item {
+    width: 100%;
+  }
+  .item_part3 {
+    justify-content: space-between;
+    width: -webkit-fill-available;
+  }
+}
+@media screen and (max-width: 750px) {
+  .addButton {
+    padding: 0.3rem 1rem;
+  }
+}
+@media screen and (max-width: 520px) {
+  .addButton {
+    padding: 0.3rem 0.8rem;
+  }
+}
+.item_quantity {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  gap: 0.2rem;
+
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: #ffffff;
+  text-decoration: none;
+  cursor: pointer;
+  text-align: center;
+  border: none;
+  font-weight: 600;
+  font-size: 0.7rem;
+  letter-spacing: 0;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.12);
+  text-transform: uppercase;
+  white-space: nowrap;
+  border: 1px solid #dcdee8;
+  line-height: 1;
+  color: #60b246;
+  border-radius: 5px;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.2);
+}
+.item_quantity_less {
+  padding: 0.1rem 0.6rem;
+  font-weight: 600;
+  font-size: 1.5rem;
+  color: #686b78;
+  cursor: pointer;
+}
+.item_quantity_number {
+  font-size: 0.8rem;
+  color: #60b246;
+  cursor: pointer;
+}
+.item_quantity_more {
+  padding: 0.1rem 0.6rem;
+  font-size: 1.5rem;
+  color: #60b246;
+  cursor: pointer;
+}

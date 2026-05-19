@@ -1,0 +1,438 @@
+---
+# #####################################################################################################################
+Copyright: >
+  Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy of
+  this software and associated documentation files (the "Software"), to deal in
+  the Software without restriction, including without limitation the rights to
+  use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+  the Software, and to permit persons to whom the Software is furnished to do so.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+  FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+  COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+  IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+# #####################################################################################################################
+
+# environment vars
+env:
+  # AWS account ID (12-digit integer)
+  account: XXXXXXXXXXXX
+
+  # AWS region string
+  region: ap-southeast-1
+
+  # token for mapBox
+  mapBoxToken: XXXXXX
+
+  # origin (e.g.: restaurant) simulator users' password (users are generated for simulation)
+  # IMPORTANT: the password MUST conform with the password requirements set up in `cognito-auth` package
+  originUserPassword: XXXXXX
+
+  # destination (e.g.: customer) simulator users' password (users are generated for simulation)
+  # IMPORTANT: the password MUST conform with the password requirements set up in `cognito-auth` package
+  destinationUserPassword: XXXXXX
+
+# string prefix for resources created by CDK
+namespace: devproto
+
+# the administrator email address
+# make sure this is accurate, cognito will send a temporary password once the deployment goes through
+administratorEmail: your-email@example.com
+
+# network configuration for the VPC that's being created
+vpcNetworkConfig:
+  # array of cidr/port pairs to add for DMZ ingress config: allow access from these CIDR:port
+  # DMZ ingress is used to access the backend system for administration purposes
+  # usually this is the IP address range of your company's VPN
+  dmzSecurityIngress:
+    - cidr: 11.22.33.0/24
+      port: 22
+    - cidr: 11.22.33.0/24
+      port: 443
+
+# the secret name we use to refer to the geoTrackingApiKey in SecretManager
+geoTrackingApiKeySecretName: GeoTrackingApiKeySecret
+
+# SSM ParameterStore keys
+parameterStoreKeys:
+  # the parameter name to use the CLOUDFRONT WebACL's ARN
+  webAclArn: /Hyperlocal/Waf/WebAclArn
+
+  # the ARN of the secret manager entry where MemoryDB generates the admin password
+  memoryDBAdminPassSecretArn: /HyperLocal/MemoryDB/AdminPassSecretArn
+
+  # the endpoint address of the MemoryDB
+  memoryDBClusterEndpoint: /HyperLocal/MemoryDB/ClusterEndpoint
+
+  # the parameter name we use to refer to geoTrackingApiUrl in SSM ParameterStore
+  geoTrackingApiUrl: /Hyperlocal/Api/GeoTracking/Url
+
+  # key for assignments table name
+  assignmentsTableName: /HyperLocal/Ddb/Assigments/TableName
+
+  # key for demAreaDispatchSettings table name
+  demAreaDispatcherSettingsTableName: /HyperLocal/Ddb/DemAreaDispatcherSettings/TableName
+
+  # key for sameday-directpudo -- delivery jobs table name
+  sameDayDirectPudoDeliveryJobsTableName: /HyperLocal/Ddb/SameDayDirectPudoDeliveryJobs/TableName
+
+  # key for sameday-directpudo -- delivery jobs table secondary index for solverJobId
+  sameDayDirectPudoDeliveryJobsSolverJobIdIndex: /HyperLocal/Ddb/SameDayDirectPudoDeliveryJobs/Index/SolverJobId
+
+  # key for sameday-directpudo -- solver jobs table name
+  sameDayDirectPudoSolverJobsTableName: /HyperLocal/Ddb/SameDayDirectPudoSolverJobs/TableName
+
+  # key for sameday-directpudo -- hubs table name
+  sameDayDirectPudoHubsTableName: /HyperLocal/Ddb/SameDayDirectPudoHubs/TableName
+
+  # key for sameday-directpudo -- vehicle capacity table name
+  sameDayDirectPudoVehicleCapacityTableName: /HyperLocal/Ddb/SameDayDirectPudoVehicleCapacity/TableName
+
+# open search service config
+# instance types:
+#   * https://docs.aws.amazon.com/opensearch-service/latest/developerguide/supported-instance-types.html
+#   * https://docs.aws.amazon.com/opensearch-service/latest/developerguide/rename.html#rename-instances
+openSearchConfig:
+  masterNodeInstanceType: m6g.2xlarge.search
+  masterNodes: 3
+  dataNodeInstanceType: m6g.2xlarge.search
+  dataNodes: 3
+
+# memory DB config
+memoryDBConfig:
+  # node types: https://docs.aws.amazon.com/memorydb/latest/devguide/nodes.supportedtypes.html
+  instanceType: db.r6g.xlarge
+
+  # number of shards
+  numShards: 1
+
+  # number of read replicas per shard
+  numReplicasPerShard: 2
+
+  # port
+  port: 6379
+
+  # timeout in MS for driverLocationUpdate TTL in DDB
+  driverLocationUpdateTTLInMS: 120000
+
+  # admin username used by the application for authenticating to Redis (required)
+  # the password will be generated automatically by the CDK deployment
+  adminUsername: memory-db-admin
+
+  # access string  (optional)
+  # define what the user can access to, by default has full access
+  # https://docs.aws.amazon.com/memorydb/latest/devguide/clusters.acls.html#access-string
+  adminAccessString: on ~* &* +@all
+
+# simulator configuration
+simulatorConfig:
+  # base name for driver usernames generated for driver simulator
+  driverBaseUsername: proto-play+hyperlocal-driversim
+
+  # base name for destination usernames generated for destination simulator
+  destinationBaseUsername: proto-play+hyperlocal-destinationsim
+
+  # number of containers to spin up in one step while starting a simulation
+  destinationContainerBatchSize: 10
+
+  # base name for origin usernames generated for origin simulator
+  originBaseUsername: proto-play+hyperlocal-originsim
+
+  # number of containers to spin up in one step while starting a simulation
+  originContainerBatchSize: 10
+
+# kinesis configuration (for ingesting driver location/status updates)
+kinesisConfig:
+  # number of shards
+  shardCount: 15
+
+  # how long to retain data (in hours) in kinesis
+  dataStreamRetentionHrs: 24
+
+  # trigger the driverLocationUpdate lambda if this batchSize is met
+  # number of records to consume at once
+  driverLocationUpdateBatchSize: 50
+
+  # the number of parallel lambdas executed (max 10)
+  driverLocationUpdateParallelizationFactor: 5
+
+  # number of retry attempts before the message goes in a dead letter queue
+  driverLocationUpdateRetryAttempts: 20
+
+  # use fanout consumers for driverLocationUpdate
+  driverLocationUpdateUseFanOutConsumer: true
+
+  # trigger the driverLocationUpdate lambda in max XXX ms if it doesn't reach its batchsize before
+  driverLocationUpdateMaxBatchingWindowMs: 5000
+
+  # trigger the geofencing lambda if this batchSize is met
+  # number of records to consume at once
+  geofencingBatchSize: 50
+
+  # the number of parallel lambdas executed (max 10)
+  geofencingParallelizationFactor: 5
+
+  # number of retry attempts before the message goes in a dead letter queue
+  geofencingRetryAttempts: 5
+
+  # use fanout consumers for geofencing
+  geofencingUseFanOutConsumer: true
+
+  # trigger geofencing lambda in max XXX ms if it doesn't reach its batchSize before
+  geofencingMaxBatchingWindowMs: 5000
+
+# configuration for the delivery application (e.g. mobile app on the driver's device)
+deliveryAppConfig:
+  # AppConfig for the driver app
+  driverAppConfig:
+    # the state when a driver is NOT assigned to any order but waiting
+    passiveState:
+      # number of seconds to wait between recording driver's GPS coordinates
+      captureFrequency: 10
+
+      # number of seconds to wait between sending the accumulated GPS data to the cloud
+      sendInterval: 30
+
+    # active state when a driver IS assinged to an order
+    activeState:
+      # number of seconds to wait between recording driver's GPS coordinates
+      captureFrequency: 4
+
+      # number of seconds to wait between sending the accumulated GPS data to the cloud
+      sendInterval: 16
+
+# settings for polling providers
+pollingProviderSettings:
+  # Timeout of processing a single message in the pending order queue
+  # see https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-visibility-timeout.html
+  pendingOrderQueueVisibilityTimeoutInMins: 1
+
+  # The time in seconds that the delivery of all messages in the pending orders queue is delayed.
+  # see https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-delay-queues.html
+  deliveryDelayInSec: 30
+
+  # batch size (max number of records) to meet to handle pending orders with a Lambda
+  # see https://docs.aws.amazon.com/lambda/latest/dg/with-sqs.html#events-sqs-queueconfig
+  sqsBatchSize: 3
+
+  # The number of times a message can be unsuccesfully dequeued from pending orders queue before being moved to the DQL.
+  # see https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-dead-letter-queues.html#sqs-dead-letter-queues-how-they-work
+  dlqMaxReceiveCount: 10
+
+# settings for the generic webhook provider
+webhookProviderSettings: {}
+
+# EXTERNAL provider config
+# * key: the _name_ of the external provider
+# * value:
+#     * apiKeySecretName: the entry key in SecretsManager where the API key is stored
+#     * apiUrlParameterStoreKey: the entry key in SSM ParameterStore where the API URL is stored
+#     * type: the type of the provider: polling-provider | webhook-provider\
+#     * callbackProviderName: [only for mock/external webhook provider] the name of the internal provider to callback to
+externalProviderConfig:
+  # example polling provider
+  MockPollingProvider:
+    apiKeySecretName: ExternalMockPollingProviderApiKeySecret
+    apiUrlParameterStoreKey: /Hyperlocal/ExternalProvider/MockPollingProvider/Url
+    type: 'polling-provider'
+  # example webhook provider
+  MockWebhookProvider:
+    apiKeySecretName: ExternalMockWebhookProviderApiKeySecret
+    apiUrlParameterStoreKey: /Hyperlocal/ExternalProvider/MockWebhookProvider/Url
+    type: 'webhook-provider'
+    callbackProviderName: 'ExampleWebhookProvider'
+
+# providers in the system (non-external)
+# * key: the name of the provider
+# * value:
+#     * apiKeySecretName: the entry key in SecretsManager wherre the API key is stored
+providersConfig:
+  # example polling provider (non-external)
+  ExamplePollingProvider:
+    apiKeySecretName: ExamplePollingProviderApiKeySecret
+
+  # example webhook provider (non-external)
+  ExampleWebhookProvider:
+    apiKeySecretName: ExampleWebhookProviderApiKeySecret
+
+  # the example implementation of an instant delivery provider
+  InstantDeliveryProvider:
+    apiKeySecretName: InstantDeliveryWebhookProviderApiKeySecret
+
+  # the example implementation of an same day delivery provider
+  SameDayDeliveryProvider:
+    apiKeySecretName: SameDayDeliveryWebhookProviderApiKeySecret
+
+
+# settings for the order manager component
+orderManagerSettings:
+  # timeout for the provider feedback
+  # if we don't get an update by then, it will find a new provider
+  providerTimeoutInMinutes: 240
+
+  # timeout that is used for the origin (eg. restaurant) to ack the order
+  # if a reject/accept event doesn't come by then, the order will be automaticall rejected
+  originTimeoutInMinutes: 5
+
+  # timeout for the order execution. if the order has not been
+  # elaborate within this timeout the execution would be aborted.
+  # default: 5 hours
+  orderTimeoutInMinutes: 300
+
+# settigns for the example instant delivery provider implementation
+instantDeliveryProviderSettings:
+  # shard count for the order batch stream
+  orderBatchStreamShardCount: 2
+
+  # how long to retain data (in hours)
+  dataStreamRetentionHrs: 48
+
+  # order stream batchsize
+  orderIngestBatchSize: 150
+
+  # the number of parallel lambdas executed (max 10) to handle incoming orders through the kinesis stream
+  orderIngestParallelizationFactor: 1
+
+  # number of retry attempts before the message goes in a dead letter queue
+  orderIngestRetryAttempts: 20
+
+  # use fanout consumers for incoming orders
+  orderIngestUseFanOutConsumer: false
+
+  # # trigger the incoming order handler lambda in max XXX ms if it doesn't reach its batchsize before
+  orderIngestMaxBatchingWindowMs: 60000
+
+  # run the driver cleanup lambda every XX seconds
+  driverCleanupIntervalInSeconds: 15
+
+  # timeout for driver to acknowledge an assigned order - otherwise order goes back to unassigned queue
+  driverAcknowledgeTimeoutInSeconds: 30
+
+  # interval in mins for subMinuteStepFunction helper
+  subMinuteStepFunctionIntervalInMinutes: 10
+
+  # subMinuteStepFunction timeout
+  subMinuteStepFunctionTimeoutInMinutes: 12
+
+  # cancel orders after XX seconds if not assigned
+  orderCancellationTimeoutInSeconds: 1500
+
+  # define the max timeout for dispatching orders to drivers
+  # executions that take longer than this will be aborted
+  orderDispatchTimeoutInMinutes: 30
+
+  # bias for geocluster algo
+  # see https://github.com/yetzt/node-geocluster
+  geoClusteringBias: 1.8
+
+# settigns for the example same day delivery provider implementation
+sameDayDeliveryProviderSettings:
+  # number of retry attempts before the message goes in a dead letter queue
+  orderIngestRetryAttempts: 20
+
+  # order ingest max batchsize, if reach this value the dispatcher will start
+  orderIngestMaxBatchingSize: 150
+
+  # trigger the dispatcher orchestrator in max XXX min if it doesn't reach its orderIngestMaxBatchingSize before
+  orderIngestMaxBatchingWindowMinutes: 20
+
+  # trigger the order ingestion validator that would verify if either the batch size or batch window is reached in order to trigger the dispatcher
+  orderIngestionValidatorIntervalInMinutes: 2
+
+  # run the driver cleanup lambda every XX seconds
+  driverCleanupIntervalInSeconds: 15
+
+  # timeout for driver to acknowledge an assigned job - otherwise orders in the job goes back as unassigned
+  driverAcknowledgeTimeoutInSeconds: 30
+
+  # interval in mins for subMinuteStepFunction helper
+  subMinuteStepFunctionIntervalInMinutes: 10
+
+  # subMinuteStepFunction timeout
+  subMinuteStepFunctionTimeoutInMinutes: 12
+
+  # cancel orders after XX minutes if not assigned
+  orderCancellationTimeoutInMinutes: 360
+
+  # define the max timeout for dispatching orders to drivers
+  # executions that take longer than this will be aborted
+  orderDispatchTimeoutInMinutes: 60
+
+
+# graphhopper ECS service-related docker settings
+graphhopperSettings:
+  # URL that points to the OSM pbf file. This will be used in the pre-built
+  # graphhopper docker image along with the pre-generated gh-cache
+  osmPbfMapFileUrl: https://download.geofabrik.de/asia/indonesia-latest.osm.pbf
+
+  # desired amount of ECS tasks that run in parallel to serve requests to graph hopper
+  ecsTaskCount: 4
+
+  # optional JAVA_OPTS
+  # javaOpts: -Xmx6g -Xms6g -Ddw.server.application_connectors[0].bind_host=0.0.0.0 -Ddw.server.application_connectors[0].port=80
+
+  # name for graphhopper docker repo
+  containerName: graphhopper-indonesia
+
+# settings for various dispatcher domains
+dispatcherSettings:
+  # the instance type for the dispatcher ECS cluster's autoscaling group
+  # you should use GRAVITON INSTANCES for higher performance and lower price
+  # if you choose to use non-graviton instances, you'll need to change the machine image in the code
+  # make sure the instance type is available in your region (i.e.: use c7g instances if you can)
+  dispatchAsgInstanceType: c6g.xlarge
+
+  # the desired capacity for the dispatcher ECS cluster's autoscaling group
+  dispatchAsgDesiredCapacity: 2
+
+  # instant delivery domain
+  instant:
+    # instant - sequential dispatcher
+    sequential:
+      # desired amount of ECS tasks that run in parallel to serve requests to the dispatcher
+      ecsTaskCount: 2
+
+      # name for dispatcher docker repo
+      containerName: order-dispatcher
+
+      # [OPTIONAL] port mapping
+      containerPort: 8080
+      hostPort: 8080
+
+    # instant - mixed pickup dropoff dispatcher
+    mixedpudo:
+      # desired amount of ECS tasks that run in parallel to serve requests to the dispatcher
+      ecsTaskCount: 2
+
+      # name for dispatcher docker repo
+      containerName: order-dispatcher-instant-mixedpudo
+
+      # [OPTIONAL] port mapping
+      containerPort: 8080
+      hostPort: 8080
+
+  # same-day delivery domain
+  sameday:
+  # settings for same day - direct pudo dispatcher
+    directpudo:
+      # desired amount of ECS tasks that run in parallel to serve requests to the dispatcher
+      ecsTaskCount: 2
+
+      # name for dispatcher docker repo
+      containerName: order-dispatcher-sameday-directpudo
+
+      # The soft limit (in MiB) of memory to reserve for the container.
+      memoryReservationMiB: 8192
+
+      # [OPTIONAL] port mapping
+      containerPort: 8080
+      hostPort: 8080
+
+
+# country to configure the simulator for. Allowed values: Philippines and Indonesia
+# default: Indonesia
+country: Indonesia
