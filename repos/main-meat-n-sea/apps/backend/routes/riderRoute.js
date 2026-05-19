@@ -1,12 +1,13 @@
 import express from "express";
+import authMiddleware, { roleMiddleware } from "../middleware/auth.js";
+import { registerRider, getRiderProfile, toggleAvailability, updateLocation, getAvailableJobs } from "../controllers/riderController.js";
 
 const riderRouter = express.Router();
 
-// Placeholder routes for Phase 1 Setup
-riderRouter.post("/register", (req, res) => res.json({ success: true, message: "Register Rider" }));
-riderRouter.get("/me", (req, res) => res.json({ success: true, message: "My Rider Profile" }));
-riderRouter.put("/me/availability", (req, res) => res.json({ success: true, message: "Toggle Availability" }));
-riderRouter.put("/me/location", (req, res) => res.json({ success: true, message: "Update Location" }));
-riderRouter.get("/me/jobs", (req, res) => res.json({ success: true, message: "Get Nearby Jobs" }));
+riderRouter.post("/register", authMiddleware, roleMiddleware(['rider']), registerRider);
+riderRouter.get("/me", authMiddleware, roleMiddleware(['rider']), getRiderProfile);
+riderRouter.put("/me/availability", authMiddleware, roleMiddleware(['rider']), toggleAvailability);
+riderRouter.put("/me/location", authMiddleware, roleMiddleware(['rider']), updateLocation);
+riderRouter.get("/me/jobs", authMiddleware, roleMiddleware(['rider']), getAvailableJobs);
 
 export default riderRouter;

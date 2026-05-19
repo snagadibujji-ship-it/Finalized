@@ -1,11 +1,11 @@
 import express from "express";
+import { loginUser, registerUser, getMe } from "../controllers/authController.js";
+import authMiddleware from "../middleware/auth.js";
 
 const authRouter = express.Router();
 
-// Placeholder routes for Phase 1 Setup
-authRouter.post("/register", (req, res) => res.json({ success: true, message: "Register" }));
-authRouter.post("/login", (req, res) => res.json({ success: true, message: "Login" }));
-authRouter.post("/refresh", (req, res) => res.json({ success: true, message: "Refresh token" }));
-authRouter.post("/logout", (req, res) => res.json({ success: true, message: "Logout" }));
+authRouter.post("/register", registerUser);
+authRouter.post("/login", loginUser);
+authRouter.get("/me", authMiddleware, getMe);
 
 export default authRouter;

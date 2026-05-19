@@ -1,12 +1,12 @@
 import express from "express";
-// import { loginUser,registerUser } from "../controllers/userController.js";
+import authMiddleware from "../middleware/auth.js";
+import { getProfile, updateProfile, getWallet, getMyOrders } from "../controllers/userController.js";
 
 const userRouter = express.Router();
 
-// Placeholders replacing direct auth routes
-userRouter.get("/me", (req, res) => res.json({ success: true, message: "Get My Profile" }));
-userRouter.put("/me", (req, res) => res.json({ success: true, message: "Update Profile" }));
-userRouter.get("/me/wallet", (req, res) => res.json({ success: true, message: "Get Wallet Balance" }));
-userRouter.get("/me/orders", (req, res) => res.json({ success: true, message: "Get My Orders" }));
+userRouter.get("/me", authMiddleware, getProfile);
+userRouter.put("/me", authMiddleware, updateProfile);
+userRouter.get("/me/wallet", authMiddleware, getWallet);
+userRouter.get("/me/orders", authMiddleware, getMyOrders);
 
 export default userRouter;

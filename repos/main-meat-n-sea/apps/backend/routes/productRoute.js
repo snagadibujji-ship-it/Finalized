@@ -1,11 +1,12 @@
 import express from "express";
+import authMiddleware, { roleMiddleware } from "../middleware/auth.js";
+import { listProducts, createProduct, updateProduct, deleteProduct } from "../controllers/productController.js";
 
 const productRouter = express.Router();
 
-// Placeholder routes for Phase 1 Setup
-productRouter.get("/", (req, res) => res.json({ success: true, message: "List Products" }));
-productRouter.post("/", (req, res) => res.json({ success: true, message: "Create Product" }));
-productRouter.put("/:id", (req, res) => res.json({ success: true, message: "Update Product" }));
-productRouter.delete("/:id", (req, res) => res.json({ success: true, message: "Delete Product" }));
+productRouter.get("/", listProducts);
+productRouter.post("/", authMiddleware, roleMiddleware(['vendor']), createProduct);
+productRouter.put("/:id", authMiddleware, roleMiddleware(['vendor']), updateProduct);
+productRouter.delete("/:id", authMiddleware, roleMiddleware(['vendor']), deleteProduct);
 
 export default productRouter;
