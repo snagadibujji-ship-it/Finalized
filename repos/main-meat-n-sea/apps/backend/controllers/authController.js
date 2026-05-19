@@ -18,16 +18,17 @@ const registerUser = async (req, res) => {
       return res.status(400).json({ success: false, message: "User already exists" });
     }
     // validating email format and strong password
-    if (!validator.isEmail(email)) {
+    if (!email || !validator.isEmail(email)) {
       return res.status(400).json({ success: false, message: "Please enter a valid email" });
     }
     if (password.length < 8) {
       return res.status(400).json({ success: false, message: "Please enter a strong password" });
     }
 
-    // validate role
-    const validRoles = ['customer', 'vendor', 'rider', 'worker', 'admin'];
-    const assignedRole = validRoles.includes(role) ? role : 'customer';
+    // Security: Prevent public users from registering as admin/worker.
+    // In a real system, these roles are assigned internally.
+    const publicRoles = ['customer', 'vendor', 'rider'];
+    const assignedRole = publicRoles.includes(role) ? role : 'customer';
 
     // hashing user password
     const salt = await bcrypt.genSalt(10);

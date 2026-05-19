@@ -42,11 +42,26 @@ const getVendorProfile = async (req, res) => {
 // Update Current Vendor Profile
 const updateVendorProfile = async (req, res) => {
   try {
-    const updates = req.body;
-    // Don't allow updating sensitive/admin-controlled fields directly
-    delete updates.status;
-    delete updates.commissionPercent;
-    delete updates.userId;
+    const {
+      shopName, businessType, gst, aadhaar, pan, address,
+      landmark, workingHours, serviceRadius, serviceAreaCoords,
+      bankAccount, upiId
+    } = req.body;
+
+    // Explicit allowlist of fields a vendor can update.
+    const updates = {};
+    if (shopName) updates.shopName = shopName;
+    if (businessType) updates.businessType = businessType;
+    if (gst) updates.gst = gst;
+    if (aadhaar) updates.aadhaar = aadhaar;
+    if (pan) updates.pan = pan;
+    if (address) updates.address = address;
+    if (landmark) updates.landmark = landmark;
+    if (workingHours) updates.workingHours = workingHours;
+    if (serviceRadius) updates.serviceRadius = serviceRadius;
+    if (serviceAreaCoords) updates.serviceAreaCoords = serviceAreaCoords;
+    if (bankAccount) updates.bankAccount = bankAccount;
+    if (upiId) updates.upiId = upiId;
 
     const vendor = await vendorModel.findOneAndUpdate(
       { userId: req.user.userId },

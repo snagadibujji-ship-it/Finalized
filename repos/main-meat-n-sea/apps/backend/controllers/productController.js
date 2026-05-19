@@ -38,9 +38,23 @@ const createProduct = async (req, res) => {
 const updateProduct = async (req, res) => {
   try {
     const vendor = await vendorModel.findOne({ userId: req.user.userId });
+
+    // Explicit allowlist of updatable fields
+    const { name, description, category, price, offerPrice, stockQuantity, weight, images, isAvailable } = req.body;
+    const updates = {};
+    if (name) updates.name = name;
+    if (description) updates.description = description;
+    if (category) updates.category = category;
+    if (price) updates.price = price;
+    if (offerPrice) updates.offerPrice = offerPrice;
+    if (stockQuantity !== undefined) updates.stockQuantity = stockQuantity;
+    if (weight) updates.weight = weight;
+    if (images) updates.images = images;
+    if (isAvailable !== undefined) updates.isAvailable = isAvailable;
+
     const product = await productModel.findOneAndUpdate(
       { _id: req.params.id, vendorId: vendor._id },
-      { $set: req.body },
+      { $set: updates },
       { new: true }
     );
 
