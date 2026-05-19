@@ -108,4 +108,45 @@ const trackOrder = async (req, res) => {
   }
 };
 
-export { placeOrder, getOrderDetails, cancelOrder, trackOrder };
+// Vendor Order Management - Update Status
+const updateOrderStatus = async (req, res) => {
+  try {
+    const { status } = req.body;
+    const order = await orderModel.findById(req.params.id);
+
+    if (!order) {
+      return res.status(404).json({ success: false, message: "Order not found" });
+    }
+
+    // Must verify this order belongs to the requesting vendor
+    const vendor = await vendorModel.findOne({ userId: req.user.userId });
+    if (!vendor || order.vendorId.toString() !== vendor._id.toString()) {
+      return res.status(403).json({ success: false, message: "Unauthorized" });
+    }
+
+    order.status = status;
+    order.statusTimeline.push({ status, timestamp: new Date() });
+    await order.save();
+
+    res.json({ success: true, order });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Server Error" });
+  }
+};
+
+// Vendor Order Management - Get Incoming Orders
+const getVendorOrders = async (req, res) => {
+  try {
+    const vendor = await vendorModel.findOne({ userId: req.user.userId });
+    if (!vendor) {
+       return res.status(403).json({ success: false, message: "Vendor profile not found" });
+    }
+
+    const orders = await orderModel.find({ vendorId: vendor._id }).sort({ createdAt: -1 });
+    res.json({ success: true, orders });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Server Error" });
+  }
+};
+
+export { placeOrder, getOrderDetails, cancelOrder, trackOrder, updateOrderStatus, getVendorOrders };

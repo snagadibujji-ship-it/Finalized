@@ -22,9 +22,13 @@ const createProduct = async (req, res) => {
     const vendor = await vendorModel.findOne({ userId: req.user.userId });
     if (!vendor) return res.status(403).json({ success: false, message: "Vendor profile not found" });
 
+    // Handle uploaded images
+    const imagePaths = req.files ? req.files.map(file => `/images/${file.filename}`) : [];
+
     const newProduct = new productModel({
       ...req.body,
-      vendorId: vendor._id
+      vendorId: vendor._id,
+      images: imagePaths
     });
 
     await newProduct.save();
@@ -40,7 +44,7 @@ const updateProduct = async (req, res) => {
     const vendor = await vendorModel.findOne({ userId: req.user.userId });
 
     // Explicit allowlist of updatable fields
-    const { name, description, category, price, offerPrice, stockQuantity, weight, images, isAvailable } = req.body;
+    const { name, description, category, price, offerPrice, stockQuantity, weight, isAvailable } = req.body;
     const updates = {};
     if (name) updates.name = name;
     if (description) updates.description = description;
@@ -49,8 +53,13 @@ const updateProduct = async (req, res) => {
     if (offerPrice) updates.offerPrice = offerPrice;
     if (stockQuantity !== undefined) updates.stockQuantity = stockQuantity;
     if (weight) updates.weight = weight;
-    if (images) updates.images = images;
     if (isAvailable !== undefined) updates.isAvailable = isAvailable;
+
+    // Handle uploaded images (append new ones)
+    if (req.files && req.files.length > 0) {
+      const newImagePaths = req.files.map(file => `/images/${file.filename}`);
+      updates.$push = { images: { $each: newImagePaths } };
+    }
 
     const product = await productModel.findOneAndUpdate(
       { _id: req.params.id, vendorId: vendor._id },
