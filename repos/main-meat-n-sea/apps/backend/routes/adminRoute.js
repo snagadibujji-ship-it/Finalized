@@ -1,7 +1,7 @@
 import express from "express";
 import authMiddleware, { roleMiddleware } from "../middleware/auth.js";
 import {
-  getDashboardStats, listAllVendors, approveVendor, rejectVendor,
+  getDashboardStats, getAnalytics, listAllVendors, approveVendor, rejectVendor,
   listAllRiders, listAllOrders, listAllUsers
 } from "../controllers/adminController.js";
 
@@ -11,6 +11,7 @@ const adminRouter = express.Router();
 adminRouter.use(authMiddleware, roleMiddleware(['admin']));
 
 adminRouter.get("/dashboard", getDashboardStats);
+adminRouter.get("/analytics", getAnalytics);
 adminRouter.get("/vendors", listAllVendors);
 adminRouter.put("/vendors/:id/approve", approveVendor);
 adminRouter.put("/vendors/:id/reject", rejectVendor);

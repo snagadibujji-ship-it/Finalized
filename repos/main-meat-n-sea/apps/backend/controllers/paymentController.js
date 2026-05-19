@@ -115,6 +115,26 @@ export const verifyPayment = async (req, res) => {
 
     // C. Platform Fee stays with Admin implicitly (no direct wallet needed right now)
 
+    // Phase 8: Trigger Push Notification to Vendor
+    if (dbOrder.vendorId) {
+      const vendorUser = await userModel.findOne({ role: 'vendor', _id: dbOrder.vendorId });
+      // The _id referenced is actually the vendor document, let's fetch the actual user via vendor doc
+      const { default: vendorModel } = await import('../models/vendorModel.js');
+      const vendorDoc = await vendorModel.findById(dbOrder.vendorId);
+      if (vendorDoc) {
+        const userDoc = await userModel.findById(vendorDoc.userId);
+        if (userDoc && userDoc.fcmToken) {
+          const { sendPushNotification } = await import('../utils/notificationService.js');
+          await sendPushNotification(
+            userDoc.fcmToken,
+            "New Order Received!",
+            `You have received a new order for ₹${(subtotal / 100).toFixed(2)}`,
+            { orderId: dbOrder._id.toString() }
+          );
+        }
+      }
+    }
+
     res.json({ success: true, message: "Payment verified successfully" });
   } catch (error) {
     console.error("Verify Payment Error:", error);

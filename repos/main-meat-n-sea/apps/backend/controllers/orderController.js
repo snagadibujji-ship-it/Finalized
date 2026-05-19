@@ -128,6 +128,21 @@ const updateOrderStatus = async (req, res) => {
     order.statusTimeline.push({ status, timestamp: new Date() });
     await order.save();
 
+    // Phase 8: Push Notification for Customer on Delivery Departure
+    if (status === 'out_for_delivery') {
+      const { default: userModel } = await import('../models/userModel.js');
+      const customer = await userModel.findById(order.customerId);
+      if (customer && customer.fcmToken) {
+        const { sendPushNotification } = await import('../utils/notificationService.js');
+        await sendPushNotification(
+          customer.fcmToken,
+          "Order Out For Delivery!",
+          "Your rider has picked up the order and is on the way.",
+          { orderId: order._id.toString() }
+        );
+      }
+    }
+
     res.json({ success: true, order });
   } catch (error) {
     res.status(500).json({ success: false, message: "Server Error" });

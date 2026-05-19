@@ -15,6 +15,47 @@ const getDashboardStats = async (req, res) => {
   }
 };
 
+const getAnalytics = async (req, res) => {
+  try {
+    // 1. Total Revenue in Paise (sum of platformFee)
+    const revenueAgg = await orderModel.aggregate([
+      { $match: { paymentStatus: 'paid' } },
+      { $group: { _id: null, totalRevenuePaise: { $sum: '$platformFee' } } }
+    ]);
+    const totalRevenuePaise = revenueAgg.length > 0 ? revenueAgg[0].totalRevenuePaise : 0;
+
+    // 2. Total Orders Today
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Start of today
+    const totalOrdersToday = await orderModel.countDocuments({
+      createdAt: { $gte: today }
+    });
+
+    // 3. Top 5 Vendors by Order Count
+    const topVendorsAgg = await orderModel.aggregate([
+      { $match: { paymentStatus: 'paid' } },
+      { $group: { _id: '$vendorId', orderCount: { $sum: 1 }, totalSalesPaise: { $sum: '$subtotal' } } },
+      { $sort: { orderCount: -1 } },
+      { $limit: 5 },
+      { $lookup: { from: 'vendors', localField: '_id', foreignField: '_id', as: 'vendorDetails' } },
+      { $unwind: '$vendorDetails' },
+      { $project: { _id: 0, vendorId: '$_id', shopName: '$vendorDetails.shopName', orderCount: 1, totalSalesPaise: 1 } }
+    ]);
+
+    res.json({
+      success: true,
+      analytics: {
+        totalRevenuePaise,
+        totalOrdersToday,
+        topVendors: topVendorsAgg
+      }
+    });
+  } catch (error) {
+    console.error("Admin Analytics Error:", error);
+    res.status(500).json({ success: false, message: "Server Error" });
+  }
+};
+
 const listAllVendors = async (req, res) => {
   try {
     const vendors = await vendorModel.find().populate('userId', 'name email phone').lean();
@@ -87,6 +128,6 @@ const listAllUsers = async (req, res) => {
 };
 
 export {
-  getDashboardStats, listAllVendors, approveVendor, rejectVendor,
+  getDashboardStats, getAnalytics, listAllVendors, approveVendor, rejectVendor,
   listAllRiders, listAllOrders, listAllUsers
 };
