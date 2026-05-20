@@ -1,5 +1,6 @@
 import orderModel from "../models/orderModel.js";
 import productModel from "../models/productModel.js";
+import couponModel from "../models/couponModel.js";
 import redisClient from "../config/redis.js";
 import { SURGE_REDIS_KEY } from "../workers/surgePricing.js";
 
@@ -17,7 +18,7 @@ const getSurgeStatus = async (req, res) => {
 // Place Order
 const placeOrder = async (req, res) => {
   try {
-    const { vendorId, items, deliveryAddress, paymentMethod } = req.body;
+    const { vendorId, items, deliveryAddress, paymentMethod, couponCode } = req.body;
 
     // Server-side calculation to prevent price manipulation using Paise/Cents (integer math)
     let calculatedSubtotalPaise = 0;
@@ -49,8 +50,46 @@ const placeOrder = async (req, res) => {
     const baseDeliveryFeePaise = 60 * 100;
     const deliveryFeePaise = Math.round(baseDeliveryFeePaise * surgeMultiplier);
 
-    const platformFeePaise = Math.round(calculatedSubtotalPaise * 0.10); // 10% platform fee
-    const totalPaise = calculatedSubtotalPaise + deliveryFeePaise + platformFeePaise;
+    let platformFeePaise = Math.round(calculatedSubtotalPaise * 0.10); // 10% platform fee
+
+    // Phase 1.1: Coupon Promotions Engine
+    let discountAmountPaise = 0;
+    let appliedCoupon = null;
+
+    if (couponCode) {
+      const coupon = await couponModel.findOne({ code: couponCode.toUpperCase(), isActive: true });
+      if (coupon && new Date() <= new Date(coupon.expiresAt) && coupon.usedCount < coupon.maxUses && calculatedSubtotalPaise >= coupon.minOrderValue) {
+
+        // Recalculate discount natively
+        if (coupon.discountType === 'flat') {
+          discountAmountPaise = coupon.discountValue;
+        } else if (coupon.discountType === 'percent') {
+          const calcDisc = Math.round(calculatedSubtotalPaise * (coupon.discountValue / 100));
+          discountAmountPaise = coupon.maxDiscount ? Math.min(calcDisc, coupon.maxDiscount) : calcDisc;
+        }
+
+        // Cap discount to prevent negative totals
+        if (discountAmountPaise > calculatedSubtotalPaise) {
+           discountAmountPaise = calculatedSubtotalPaise;
+        }
+
+        appliedCoupon = coupon.code;
+      }
+    }
+
+    // CRITICAL FINANCIAL LOGIC: The platform absorbs the cost of the promotion.
+    // We deduct the discount from the platformFee. We DO NOT touch the Subtotal,
+    // ensuring the Vendor is paid their full amount in the ledger.
+    platformFeePaise = platformFeePaise - discountAmountPaise;
+
+    // We do not let platform fees go negative in the ledger (floor at 0).
+    // If the discount is massive, the platform takes a 0 fee, and the remainder
+    // of the discount effectively offsets the customer's total out of the platform's pocket.
+    const effectivePlatformFeeForLedger = Math.max(0, platformFeePaise);
+
+    // Calculate final safe total
+    let finalTotalPaise = calculatedSubtotalPaise + deliveryFeePaise + platformFeePaise;
+    if (finalTotalPaise < 0) finalTotalPaise = 0;
 
     const newOrder = new orderModel({
       customerId: req.user.userId,
@@ -58,13 +97,20 @@ const placeOrder = async (req, res) => {
       items: finalItems,
       subtotal: calculatedSubtotalPaise,
       deliveryFee: deliveryFeePaise,
-      platformFee: platformFeePaise,
-      total: totalPaise,
+      platformFee: effectivePlatformFeeForLedger,
+      total: finalTotalPaise,
       paymentMethod,
-      deliveryAddress
+      deliveryAddress,
+      couponCode: appliedCoupon,
+      discountAmount: discountAmountPaise // Storing for record-keeping
     });
 
     await newOrder.save();
+
+    // Increment coupon usage if one was applied
+    if (appliedCoupon) {
+       await couponModel.updateOne({ code: appliedCoupon }, { $inc: { usedCount: 1 } });
+    }
     res.status(201).json({ success: true, order: newOrder });
   } catch (error) {
     res.status(500).json({ success: false, message: "Server Error", error: error.message });

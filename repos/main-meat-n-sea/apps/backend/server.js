@@ -15,6 +15,7 @@ import orderRouter from "./routes/orderRoute.js";
 import riderRouter from "./routes/riderRoute.js";
 import adminRouter from "./routes/adminRoute.js";
 import paymentRouter from "./routes/paymentRoute.js";
+import couponRouter from "./routes/couponRoute.js";
 import { startSurgeWorker } from "./workers/surgePricing.js";
 
 // app config
@@ -108,6 +109,7 @@ app.use("/api/orders", orderRouter);
 app.use("/api/riders", riderRouter);
 app.use("/api/admin", adminRouter);
 app.use("/api/payments", paymentRouter);
+app.use("/api/coupons", couponRouter);
 
 app.get("/", (req, res) => {
   res.send("MEAT N SEA API is running...");

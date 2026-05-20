@@ -15,7 +15,16 @@ const razorpay = new Razorpay({
 // Create Order
 export const createOrder = async (req, res) => {
   try {
-    const { amount, receipt } = req.body;
+    const { receipt } = req.body;
+
+    // Securely fetch exact amount from the verified internal database order
+    // Do NOT trust the client-provided amount
+    const dbOrder = await orderModel.findById(receipt);
+    if (!dbOrder) {
+       return res.status(404).json({ success: false, message: "Order not found" });
+    }
+
+    const amount = dbOrder.total;
 
     if (process.env.MOCK_PAYMENTS === "true") {
       return res.json({
@@ -46,6 +55,11 @@ export const verifyPayment = async (req, res) => {
     const dbOrder = await orderModel.findById(internal_order_id);
     if (!dbOrder) {
       return res.status(404).json({ success: false, message: "Order not found" });
+    }
+
+    // PREVENT REPLAY ATTACK / DOUBLE SPEND
+    if (dbOrder.paymentStatus === 'paid') {
+      return res.status(400).json({ success: false, message: "Order is already paid" });
     }
 
     let isVerified = false;
@@ -117,9 +131,6 @@ export const verifyPayment = async (req, res) => {
 
     // Phase 8: Trigger Push Notification to Vendor
     if (dbOrder.vendorId) {
-      const vendorUser = await userModel.findOne({ role: 'vendor', _id: dbOrder.vendorId });
-      // The _id referenced is actually the vendor document, let's fetch the actual user via vendor doc
-      const { default: vendorModel } = await import('../models/vendorModel.js');
       const vendorDoc = await vendorModel.findById(dbOrder.vendorId);
       if (vendorDoc) {
         const userDoc = await userModel.findById(vendorDoc.userId);
