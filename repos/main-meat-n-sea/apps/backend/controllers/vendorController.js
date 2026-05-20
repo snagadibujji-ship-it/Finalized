@@ -1,6 +1,7 @@
 import vendorModel from "../models/vendorModel.js";
 
-// Register Vendor Profile
+const VENDOR_SAFE_FIELDS = '-aadhaar -pan -bankAccount';
+
 const registerVendor = async (req, res) => {
   try {
     const {
@@ -28,7 +29,6 @@ const registerVendor = async (req, res) => {
   }
 };
 
-// Get Current Vendor Profile
 const getVendorProfile = async (req, res) => {
   try {
     const vendor = await vendorModel.findOne({ userId: req.user.userId });
@@ -39,7 +39,6 @@ const getVendorProfile = async (req, res) => {
   }
 };
 
-// Update Current Vendor Profile
 const updateVendorProfile = async (req, res) => {
   try {
     const {
@@ -48,7 +47,6 @@ const updateVendorProfile = async (req, res) => {
       bankAccount, upiId
     } = req.body;
 
-    // Explicit allowlist of fields a vendor can update.
     const updates = {};
     if (shopName) updates.shopName = shopName;
     if (businessType) updates.businessType = businessType;
@@ -76,15 +74,34 @@ const updateVendorProfile = async (req, res) => {
   }
 };
 
-// List Nearby Vendors (Basic mock, would use geospatial queries in prod)
+const toggleVendorOpenStatus = async (req, res) => {
+  try {
+    const vendor = await vendorModel.findOne({ userId: req.user.userId });
+    if (!vendor) return res.status(404).json({ success: false, message: "Vendor not found" });
+
+    vendor.isOpen = !vendor.isOpen;
+    await vendor.save();
+
+    res.json({ success: true, isOpen: vendor.isOpen, vendor });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Server Error" });
+  }
+};
+
 const getNearbyVendors = async (req, res) => {
   try {
-    // Basic finding of active vendors for now
-    const vendors = await vendorModel.find({ status: 'approved' }).select('-aadhaar -pan -bankAccount');
+    const includeClosed = req.query.includeClosed === 'true';
+    const filter = { status: 'approved' };
+
+    if (!includeClosed) {
+      filter.isOpen = true;
+    }
+
+    const vendors = await vendorModel.find(filter).select(VENDOR_SAFE_FIELDS);
     res.json({ success: true, vendors });
   } catch (error) {
     res.status(500).json({ success: false, message: "Server Error" });
   }
 };
 
-export { registerVendor, getVendorProfile, updateVendorProfile, getNearbyVendors };
+export { registerVendor, getVendorProfile, updateVendorProfile, toggleVendorOpenStatus, getNearbyVendors };
