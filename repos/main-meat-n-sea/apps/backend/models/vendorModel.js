@@ -11,13 +11,14 @@ const vendorSchema = new mongoose.Schema({
   address: { type: String },
   landmark: { type: String },
   workingHours: { type: String },
-  serviceRadius: { type: Number, default: 5 }, // in km
+  serviceRadius: { type: Number, default: 5 },
   serviceAreaCoords: {
     type: { type: String, enum: ['Point'], default: 'Point' },
-    coordinates: { type: [Number], required: true } // Array of [longitude, latitude]
+    coordinates: { type: [Number], required: true }
   },
   bankAccount: { type: String },
   upiId: { type: String },
+  isOpen: { type: Boolean, default: true },
   status: {
     type: String,
     enum: ['pending', 'approved', 'rejected', 'suspended'],
