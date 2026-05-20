@@ -15,6 +15,7 @@ import orderRouter from "./routes/orderRoute.js";
 import riderRouter from "./routes/riderRoute.js";
 import adminRouter from "./routes/adminRoute.js";
 import paymentRouter from "./routes/paymentRoute.js";
+import { startSurgeWorker } from "./workers/surgePricing.js";
 
 // app config
 const app = express();
@@ -91,7 +92,10 @@ app.use(cors());
 
 // DB connection
 connectDB();
-connectRedis();
+connectRedis().then(() => {
+  // Start background workers once Redis is connected
+  startSurgeWorker();
+});
 
 // API endpoints
 app.use("/images", express.static("uploads"));

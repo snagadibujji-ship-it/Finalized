@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, FlatList, StyleSheet, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
 import { useCartStore } from '../store/cartStore';
 import axios from 'axios';
@@ -8,6 +8,22 @@ const API_URL = 'http://localhost:4000/api';
 export default function CartScreen() {
   const { items, vendorId, getSubtotal, removeItem, clearCart } = useCartStore();
   const [loading, setLoading] = useState(false);
+  const [surgeActive, setSurgeActive] = useState(false);
+
+  useEffect(() => {
+    // Fetch Surge Status on load
+    const fetchSurge = async () => {
+      try {
+        const res = await axios.get(`${API_URL}/orders/surge-status`);
+        if (res.data.success && res.data.surgeActive) {
+          setSurgeActive(true);
+        }
+      } catch (e) {
+        console.error("Failed to fetch surge status");
+      }
+    };
+    fetchSurge();
+  }, []);
 
   const handlePlaceOrder = async () => {
     if (items.length === 0) return;
@@ -86,6 +102,12 @@ export default function CartScreen() {
 
   return (
     <View style={styles.container}>
+      {surgeActive && (
+        <View style={styles.surgeBanner}>
+          <Text style={styles.surgeText}>High demand: Surge pricing active.</Text>
+        </View>
+      )}
+
       <FlatList
         data={items}
         keyExtractor={item => item.productId}
@@ -136,5 +158,7 @@ const styles = StyleSheet.create({
   summaryPrice: { fontSize: 18, fontWeight: 'bold' },
   feeNote: { fontSize: 12, color: '#888', marginBottom: 16 },
   checkoutBtn: { backgroundColor: '#007AFF', padding: 16, borderRadius: 8, alignItems: 'center' },
-  checkoutBtnText: { color: '#fff', fontSize: 18, fontWeight: 'bold' }
+  checkoutBtnText: { color: '#fff', fontSize: 18, fontWeight: 'bold' },
+  surgeBanner: { backgroundColor: '#FFE4E1', padding: 10, alignItems: 'center' },
+  surgeText: { color: '#D2042D', fontWeight: 'bold', fontSize: 14 }
 });

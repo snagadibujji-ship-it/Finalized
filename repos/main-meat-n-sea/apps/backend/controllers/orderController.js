@@ -1,6 +1,18 @@
 import orderModel from "../models/orderModel.js";
-
 import productModel from "../models/productModel.js";
+import redisClient from "../config/redis.js";
+import { SURGE_REDIS_KEY } from "../workers/surgePricing.js";
+
+// Get Surge Status (For Frontend)
+const getSurgeStatus = async (req, res) => {
+  try {
+    const rawMultiplier = await redisClient.get(SURGE_REDIS_KEY);
+    const multiplier = parseFloat(rawMultiplier) || 1.0;
+    res.json({ success: true, surgeActive: multiplier > 1.0, multiplier });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Server Error" });
+  }
+};
 
 // Place Order
 const placeOrder = async (req, res) => {
@@ -29,7 +41,14 @@ const placeOrder = async (req, res) => {
       });
     }
 
-    const deliveryFeePaise = 60 * 100; // Fixed 60 rupees converted to paise
+    // Phase 1.1: Fetch active Surge Multiplier from Redis
+    const rawMultiplier = await redisClient.get(SURGE_REDIS_KEY);
+    const surgeMultiplier = parseFloat(rawMultiplier) || 1.0;
+
+    // Apply Surge Multiplier to Delivery Fee (Base 60 Rupees)
+    const baseDeliveryFeePaise = 60 * 100;
+    const deliveryFeePaise = Math.round(baseDeliveryFeePaise * surgeMultiplier);
+
     const platformFeePaise = Math.round(calculatedSubtotalPaise * 0.10); // 10% platform fee
     const totalPaise = calculatedSubtotalPaise + deliveryFeePaise + platformFeePaise;
 
@@ -164,4 +183,4 @@ const getVendorOrders = async (req, res) => {
   }
 };
 
-export { placeOrder, getOrderDetails, cancelOrder, trackOrder, updateOrderStatus, getVendorOrders };
+export { placeOrder, getOrderDetails, cancelOrder, trackOrder, updateOrderStatus, getVendorOrders, getSurgeStatus };
